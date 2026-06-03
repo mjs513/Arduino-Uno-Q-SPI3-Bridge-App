@@ -1,0 +1,28 @@
+# Source: https://forum.arduino.cc/t/getting-a-neato-xv-11-lidar-working-on-the-q/1445568/18
+services:
+  spi3bridge:
+    # App Lab will automatically look for the Dockerfile in the same folder
+    build:
+      context: .
+
+    develop:
+      # Configure `docker compose watch` to automatically rebuild the container when image source files are modified.
+      # See: https://docs.docker.com/compose/how-tos/file-watch/
+      watch:
+        - action: rebuild
+          path: ./app
+        - action: rebuild
+          path: brick_compose.yaml
+        - action: rebuild
+          path: Dockerfile
+        - action: rebuild
+          path: __init__.py
+
+    # Map the UNO Q SPI hardware line into the container
+    devices:
+      - "/dev/spidev0.0:/dev/spidev0.0"
+
+    ports:
+      # Expose the port for communication with the container's Flask web application.
+      # See: https://docs.docker.com/reference/compose-file/services/#ports
+      - "5000:5000"
