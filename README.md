@@ -117,7 +117,7 @@ develop:
       path: brick_compose.yaml
     - action: rebuild
       path: Dockerfile
-    - action: rebuild
+    - action: restart
       path: __init__.py
 ```
 Whenever any of these files change:
@@ -127,10 +127,10 @@ Whenever any of these files change:
 3. App Lab immediately uses the updated code
 
 **Starting the Watcher**
-Run this on the UNO Q (not inside the container):
+Start the app and then run this on the UNO Q (not inside the container):
 
-```Code
-docker compose watch
+```text
+docker compose --file ~/ArduinoApps/spibridge/.cache/app-compose.yaml watch
 ```
 You will see output like:
 
@@ -140,6 +140,13 @@ You will see output like:
   spi3bridge Recreating
   spi3bridge Starting
  ```
+
+Append & to the command:
+```
+docker compose --file ~/ArduinoApps/spibridge/.cache/app-compose.yaml watch --no-up &
+```
+The & control operator causes the process to run as a background job. This is useful in the case where the command creates a persistent process because it allows you to continue working from the shell while the process is running asynchronously
+
 What Triggers a Rebuild
 - Editing app.py
 - Editing spihelper.py
@@ -369,7 +376,7 @@ docker system prune --force && docker compose -f ~/ArduinoApps/spibridge/.cache/
 ```
 **Debugging container errors**
 ```
-docker compose --file ~/ArduinoApps/spibridge/.cache/app-compose.y
+docker compose --file ~/ArduinoApps/spibridge/.cache/app-compose.yaml logs
 ```
 
 ## **Educational Purpose**
@@ -393,7 +400,7 @@ MIT License
 ## **References**
 - [**Compose File Reference**](https://docs.docker.com/reference/compose-file/)
 - [**Docker Compose Quickstart**](https://docs.docker.com/compose/gettingstarted/)
-- **Networking overview**](https://docs.docker.com/engine/network/)
+- [**Networking overview**](https://docs.docker.com/engine/network/)
 - [**Flask Quick Start**](https://flask.palletsprojects.com/en/stable/quickstart/)
 - [**Flask App Routing**](https://www.geeksforgeeks.org/python/flask-app-routing/)
 
