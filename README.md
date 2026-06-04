@@ -264,27 +264,128 @@ Sets bits per word (usually 8).
 
 ## **App Lab Python API**
 
-The App Lab brick exposes a clean Python interface:
+Got it, Michael — you don’t want the Python implementation.  
+You want the **API reference**: a clean list of **commands**, what they do, what they return, and when to use them.
 
-```python
-import spibridge as spi
+Here is the **SPI Bridge App Lab Python API** written as a proper command reference section for your README.
 
-# Read raw bytes (hex dump)
-print(spi.readBytes())
+---
 
-# Read floats
-floats = spi.readFloats()
-print(floats)
+# **App Lab Python API (Command Reference)**
 
-# Read ints
-ints = spi.readInts()
-print(ints)
+This section documents all Python‑level commands exposed by the SPI Bridge brick.  
+These functions communicate with the Docker‑hosted Flask server running on the UNO Q.
 
-# Reconfigure SPI
-spi.config_speed(1000000)
-spi.config_mode(0)
-spi.config_bits(8)
+Each command corresponds directly to an endpoint in `app.py`.
+
+---
+
+### **Read Commands**
+---
+### **`readBytes()`**
+**Description:**  
+Reads 1024 bytes from the MCU via SPI and returns a formatted hex dump.
+
+**Returns:**  
+A single multiline string, where each line contains 16 bytes in hex format.
+
+**Use when:**  
+You want to inspect raw SPI output or debug MCU framing.
+
+---
+
+### **`readFloats()`**
+**Description:**  
+Reads 1024 bytes and interprets them as a sequence of **little‑endian float32** values.
+
+**Returns:**  
+A Python list of floats.
+
+**Use when:**  
+The MCU is sending float32 sensor data, arrays, or structured numeric output.
+
+---
+
+### **`readInts()`**
+**Description:**  
+Reads 1024 bytes and interprets them as **little‑endian int32** values.
+
+**Returns:**  
+A Python list of signed integers.
+
+**Use when:**  
+The MCU is sending int32 values, counters, timestamps, or packed integer data.
+
+---
+
+### **Configuration Commands**
+---
+### **`config_speed(hz)`**
+**Description:**  
+Sets the SPI clock speed (in Hz).
+
+**Arguments:**  
+`hz` — integer, e.g. `1000000` for 1 MHz.
+
+**Returns:**  
+JSON object:  
 ```
+{"status": "ok", "speed": <hz>}
+```
+
+**Use when:**  
+You need to match the MCU’s SPI clock or debug timing issues.
+
+---
+
+### **`config_mode(mode)`**
+**Description:**  
+Sets the SPI mode (0–3).
+
+**Arguments:**  
+`mode` — integer (0, 1, 2, or 3).
+
+**Returns:**  
+JSON object:  
+```
+{"status": "ok", "mode": <mode>}
+```
+
+**Use when:**  
+The MCU requires a specific CPOL/CPHA configuration.
+
+---
+
+### **`config_bits(bits)`**
+**Description:**  
+Sets the number of bits per SPI word (usually 8).
+
+**Arguments:**  
+`bits` — integer, typically `8`.
+
+**Returns:**  
+JSON object:  
+```
+{"status": "ok", "bits": <bits>}
+```
+
+**Use when:**  
+You need non‑standard SPI word sizes or are debugging protocol alignment.
+
+---
+
+# **Summary Table**
+
+| Command              | Purpose                                   | Return Type        |
+|---------------------|--------------------------------------------|--------------------|
+| `readBytes()`       | Read raw bytes as hex dump                 | `str`              |
+| `readFloats()`      | Read 1024 bytes as float32 array           | `list[float]`      |
+| `readInts()`        | Read 1024 bytes as int32 array             | `list[int]`        |
+| `config_speed(hz)`  | Set SPI clock speed                        | `dict` (JSON)      |
+| `config_mode(mode)` | Set SPI mode (0–3)                         | `dict` (JSON)      |
+| `config_bits(bits)` | Set bits per word                          | `dict` (JSON)      |
+
+---
 
 The App Lab code communicates with the Docker container using the hostname:
 
@@ -404,3 +505,7 @@ MIT License
 - [**Flask Quick Start**](https://flask.palletsprojects.com/en/stable/quickstart/)
 - [**Flask App Routing**](https://www.geeksforgeeks.org/python/flask-app-routing/)
 
+**Arduino Brick Development**
+
+- [**Custom Bricks**](https://github.com/arduino/docs-content/blob/app-lab-custom-bricks-documentation/content/software/app-lab/5.bricks/3.custom-bricks/custom-bricks.md)
+- [**Arduino® App Lab 0.7: Custom Bricks are here!**](https://blog.arduino.cc/2026/04/29/arduino-app-lab-0-7-custom-bricks-are-here/)
