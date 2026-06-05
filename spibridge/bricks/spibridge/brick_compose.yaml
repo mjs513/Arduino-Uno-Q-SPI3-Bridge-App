@@ -15,7 +15,7 @@ services:
           path: brick_compose.yaml
         - action: rebuild
           path: Dockerfile
-        - action: rebuild
+        - action: restart
           path: __init__.py
 
     # Map the UNO Q SPI hardware line into the container

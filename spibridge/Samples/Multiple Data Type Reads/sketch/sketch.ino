@@ -7,8 +7,9 @@
 #include "Arduino_RouterBridge.h"
 
 #define num_vals 180
+#defing spiBlock 1024
 
-SPIPeripheralClass<1024> spi;
+SPIPeripheralClass<spiBlock> spi;
 uint8_t buffer[5];
 
 void floats_to_bytes(const float* src, size_t float_count, uint8_t* dst) {
@@ -50,7 +51,7 @@ void setup() {
 
 
 void loop() {
-  uint8_t bytes[1024];
+  uint8_t bytes[spiBlock];
   //memset(bytes, 0, 1024);
   
   // 1. Read command
@@ -65,13 +66,13 @@ void loop() {
   if(buffer[0] == 0x0C) {
     get_sensor_data_ints();
     ints_to_bytes(sensorValuesInts, num_vals, bytes);
-    spi.populate(bytes, 1024);
+    spi.populate(bytes, spiBlock);
   }
   
   if(buffer[0] == 0x0B) {
     get_sensor_data();
     floats_to_bytes(sensorValues, num_vals, bytes);
-    spi.populate(bytes, 1024);
+    spi.populate(bytes, spiBlock);
   }
 
   // 3. Signal ready

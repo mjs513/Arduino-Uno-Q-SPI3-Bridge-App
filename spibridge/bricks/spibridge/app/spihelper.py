@@ -44,12 +44,27 @@ class SPIBridge:
     # -----------------------------
     # Core read functions
     # -----------------------------
-    def read_bytes(self, read_command, bytes_to_read=1024):
-        if self.spi is None:
-            raise RuntimeError("SPI not initialized. Call init_spi() first.")
+    #def read_bytes(self, read_command, bytes_to_read=1024):
+    #    if self.spi is None:
+    #        raise RuntimeError("SPI not initialized. Call init_spi() first.")
 
-        data = self.spi.xfer2(read_command + [0x00] * bytes_to_read)
-        return bytes(data)
+    #    data = self.spi.xfer2(read_command + [0x00] * bytes_to_read)
+    #    return bytes(data)
+        
+    def read_bytes(self, read_command, bytes_to_read):
+        # Ensure command is exactly 5 bytes
+        cmd = list(read_command)
+        if len(cmd) < 5:
+            cmd = cmd + [0] * (5 - len(cmd))
+        elif len(cmd) > 5:
+            cmd = cmd[:5]
+    
+        # Fill the rest with zeros
+        tx = cmd + [0] * (bytes_to_read - 5)
+    
+        # Perform SPI transfer
+        rx = self.spi.xfer(tx)
+        return rx
 
 
     # -----------------------------

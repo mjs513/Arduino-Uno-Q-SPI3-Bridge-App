@@ -1,4 +1,3 @@
-// Source: https://forum.arduino.cc/t/how-to-install-python-packages-on-the-arduino-q/1434480/7
 #ifndef SPI_PERIPHERAL_H
 #define SPI_PERIPHERAL_H
 
@@ -30,6 +29,12 @@ public:
     int begin() {
         int ret = device_init(spi_peripheral);
         return ret;
+    }
+
+    void depopulate(uint8_t &buf, size_t len) {
+        spi_transceive(spi_peripheral, &spi_cfg, &tx_bufs, &rx_bufs);
+        uint8_t* rx_bytes = static_cast<uint8_t*>(rx_bufs.buffers[0].buf);
+        buf = rx_bytes[0];
     }
 
     void* populate(uint8_t* buf, size_t len) {

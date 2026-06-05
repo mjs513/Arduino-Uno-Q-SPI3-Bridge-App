@@ -1,6 +1,6 @@
 # See: https://flask.palletsprojects.com/en/stable/quickstart/#a-minimal-application
 import struct
-
+import numpy as np
 import spihelper
 from flask import Flask, request, jsonify
 
@@ -10,64 +10,73 @@ spi = spihelper.SPIBridge()
 spi.init_spi()
 
 BYTES_TO_READ = 1024
+READ_CMD_BYTES  = [0x0A, 0, 0, 0, 0]
+READ_CMD_FLOATS = [0x0B, 0, 0, 0, 0]
+READ_CMD_INTS   = [0x0C, 0, 0, 0, 0]
+
+# ----------------------------------------------
+#
+# Helper function to get n-values from bytes,
+# floats or ints.  N will be different for each
+# 1. for Bytes it will by the number of bytes to return
+# 2. for Ints and Floats it will be the number of
+#     ints or floats to return
+#
+# ------------------------------------------------
+def get_n_param(default):
+    try:
+        n = int(request.args.get("n", default))
+        return max(0, n)
+    except:
+        return default
 
 # -----------------------------
 # READ: BYTES
 # -----------------------------
 @app.route("/read/bytes")
 def readBytes():
-    read_cmd = [0x0B, 0, 0, 0, 0]
-    data = spi.read_bytes(read_command=read_cmd, bytes_to_read=BYTES_TO_READ)
+    data = spi.read_bytes(read_command=READ_CMD_BYTES, bytes_to_read=BYTES_TO_READ)
 
-    lines = []
-    for i in range(0, len(data), 16):
-        chunk = data[i:i+16]
-        lines.append(chunk.hex(" "))
+    if not isinstance(data, (bytes, bytearray)):
+        data = bytes(data)
 
-    return {"hex": "\n".join(lines)}
+    arr = np.frombuffer(data, dtype=np.uint8)
+    n = get_n_param(len(arr))
+    return jsonify(arr[:n].tolist())
 
+    
 # -----------------------------
 # READ: FLOATS
 # -----------------------------
 @app.route("/read/floats")
 def readFloats():
-    # Source: https://forum.arduino.cc/t/how-to-install-python-packages-on-the-arduino-q/1434480/7
-    read_cmd = [0x0B, 0x00, 0x00, 0x00, 0x00]
-    data = spi.read_bytes(read_command=read_cmd, bytes_to_read=BYTES_TO_READ)
-    raw_bytes = bytes(data[:1024])
+    data = spi.read_bytes(read_command=READ_CMD_FLOATS, bytes_to_read=BYTES_TO_READ)
 
+    raw_bytes = bytes(data[:BYTES_TO_READ])
     count = len(raw_bytes) // 4
-    fmt = "<" + str(count) + "f"
 
-    floats = struct.unpack(fmt, raw_bytes)
-    formatted_data = ", ".join(f"{v:.4f}" for v in floats)
+    floats = struct.unpack("<" + str(count) + "f", raw_bytes)
+    n = get_n_param(len(floats))
+    return jsonify(list(floats[:n]))
 
-    return formatted_data
 
 # -----------------------------
 # READ: INTEGERS
 # -----------------------------
 @app.route("/read/ints")
 def readInts():
-    read_cmd = [0x0B, 0, 0, 0, 0]
+    data = spi.read_bytes(read_command=READ_CMD_INTS, bytes_to_read=BYTES_TO_READ)
 
-    # Read 1024 bytes from SPI
-    data = spi.read_bytes(read_command=read_cmd, bytes_to_read=BYTES_TO_READ)
+    if not isinstance(data, (bytes, bytearray)):
+        data = bytes(data)
 
-    # Use ALL returned bytes (Arduino starts payload at index 0)
-    raw_bytes = data
+    count = len(data) // 4
+    raw_bytes = data[:count * 4]
 
-    # Only decode full int32 values
-    count = len(raw_bytes) // 4
-    raw_bytes = raw_bytes[:count * 4]
+    arr = np.frombuffer(raw_bytes, dtype='<i4')
+    n = get_n_param(len(arr))
+    return jsonify(arr[:n].tolist())
 
-    # Little-endian int32
-    fmt = "<" + str(count) + "i"
-    ints = struct.unpack(fmt, raw_bytes)
-
-    # Return as comma-separated text
-    #return ", ".join(str(v) for v in ints)
-    return {"hex": " ".join(lines)}
 
 
 @app.route("/config/speed", methods=["POST"])
