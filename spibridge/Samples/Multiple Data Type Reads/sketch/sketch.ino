@@ -7,7 +7,7 @@
 #include "Arduino_RouterBridge.h"
 
 #define num_vals 180
-#defing spiBlock 1024
+#define spiBlock 1024
 
 SPIPeripheralClass<spiBlock> spi;
 uint8_t buffer[5];
