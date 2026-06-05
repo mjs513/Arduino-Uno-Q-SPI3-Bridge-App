@@ -262,16 +262,8 @@ Sets bits per word (usually 8).
 
 ---
 
-## **App Lab Python API**
-
-Got it, Michael — you don’t want the Python implementation.  
-You want the **API reference**: a clean list of **commands**, what they do, what they return, and when to use them.
-
-Here is the **SPI Bridge App Lab Python API** written as a proper command reference section for your README.
-
----
-
-# **App Lab Python API (Command Reference)**
+## **App Lab Python API (Command Reference)**  
+*(Updated for JSON list returns + `n` parameter support)*
 
 This section documents all Python‑level commands exposed by the SPI Bridge brick.  
 These functions communicate with the Docker‑hosted Flask server running on the UNO Q.
@@ -280,56 +272,71 @@ Each command corresponds directly to an endpoint in `app.py`.
 
 ---
 
-### **Read Commands**
+## **Read Commands**
+
 ---
-### **`readBytes()`**
+
+### **`readBytes(n=None)`**
 **Description:**  
-Reads 1024 bytes from the MCU via SPI and returns a formatted hex dump.
+Reads raw bytes from the MCU via SPI and returns them as a list of unsigned 8‑bit integers.
+
+**Arguments:**  
+- `n` *(optional)* — number of byte values to return.  
+  - If omitted, returns all bytes read (default: 1024).
 
 **Returns:**  
-A single multiline string, where each line contains 16 bytes in hex format.
+`list[int]` — each element is a `uint8` (0–255).
 
 **Use when:**  
-You want to inspect raw SPI output or debug MCU framing.
+You want direct access to the raw SPI byte stream for debugging, framing, or protocol parsing.
 
 ---
 
-### **`readFloats()`**
+### **`readFloats(n=None)`**
 **Description:**  
-Reads 1024 bytes and interprets them as a sequence of **little‑endian float32** values.
+Reads 1024 bytes from SPI and interprets them as **little‑endian float32** values.
+
+**Arguments:**  
+- `n` *(optional)* — number of float values to return.  
+  - If omitted, returns all decoded floats (default: 256 floats from 1024 bytes).
 
 **Returns:**  
-A Python list of floats.
+`list[float]` — Python floats decoded from the SPI buffer.
 
 **Use when:**  
-The MCU is sending float32 sensor data, arrays, or structured numeric output.
+The MCU is sending float32 sensor data, structured arrays, or telemetry.
 
 ---
 
-### **`readInts()`**
+### **`readInts(n=None)`**
 **Description:**  
-Reads 1024 bytes and interprets them as **little‑endian int32** values.
+Reads 1024 bytes from SPI and interprets them as **little‑endian int32** values.
+
+**Arguments:**  
+- `n` *(optional)* — number of int32 values to return.  
+  - If omitted, returns all decoded ints (default: 256 ints from 1024 bytes).
 
 **Returns:**  
-A Python list of signed integers.
+`list[int]` — signed 32‑bit integers.
 
 **Use when:**  
-The MCU is sending int32 values, counters, timestamps, or packed integer data.
+The MCU is sending counters, timestamps, fixed‑point values, or packed integer data.
 
 ---
 
-### **Configuration Commands**
+## **Configuration Commands**
+
 ---
+
 ### **`config_speed(hz)`**
 **Description:**  
 Sets the SPI clock speed (in Hz).
 
 **Arguments:**  
-`hz` — integer, e.g. `1000000` for 1 MHz.
+- `hz` — integer, e.g. `1000000` for 1 MHz.
 
 **Returns:**  
-JSON object:  
-```
+```json
 {"status": "ok", "speed": <hz>}
 ```
 
@@ -343,11 +350,10 @@ You need to match the MCU’s SPI clock or debug timing issues.
 Sets the SPI mode (0–3).
 
 **Arguments:**  
-`mode` — integer (0, 1, 2, or 3).
+- `mode` — integer (0, 1, 2, or 3).
 
 **Returns:**  
-JSON object:  
-```
+```json
 {"status": "ok", "mode": <mode>}
 ```
 
@@ -361,11 +367,10 @@ The MCU requires a specific CPOL/CPHA configuration.
 Sets the number of bits per SPI word (usually 8).
 
 **Arguments:**  
-`bits` — integer, typically `8`.
+- `bits` — integer, typically `8`.
 
 **Returns:**  
-JSON object:  
-```
+```json
 {"status": "ok", "bits": <bits>}
 ```
 
@@ -374,16 +379,34 @@ You need non‑standard SPI word sizes or are debugging protocol alignment.
 
 ---
 
-# **Summary Table**
+### **`config_bytes_to_read(n)`**
+**Description:**  
+Sets how many bytes the SPI bridge reads per transaction.
 
-| Command              | Purpose                                   | Return Type        |
-|---------------------|--------------------------------------------|--------------------|
-| `readBytes()`       | Read raw bytes as hex dump                 | `str`              |
-| `readFloats()`      | Read 1024 bytes as float32 array           | `list[float]`      |
-| `readInts()`        | Read 1024 bytes as int32 array             | `list[int]`        |
-| `config_speed(hz)`  | Set SPI clock speed                        | `dict` (JSON)      |
-| `config_mode(mode)` | Set SPI mode (0–3)                         | `dict` (JSON)      |
-| `config_bits(bits)` | Set bits per word                          | `dict` (JSON)      |
+**Arguments:**  
+- `n` — integer, must be a power‑of‑two multiple (e.g., 256, 512, 1024).
+
+**Returns:**  
+```json
+{"status": "ok", "bytes": <n>}
+```
+
+**Use when:**  
+You want to adjust the SPI payload size for your MCU protocol.
+
+---
+
+## **Summary Table**
+
+| Command                | Purpose                                   | Return Type        |
+|------------------------|--------------------------------------------|--------------------|
+| `readBytes(n)`         | Read raw bytes as `uint8` list             | `list[int]`        |
+| `readFloats(n)`        | Read float32 values from SPI               | `list[float]`      |
+| `readInts(n)`          | Read int32 values from SPI                 | `list[int]`        |
+| `config_speed(hz)`     | Set SPI clock speed                        | `dict` (JSON)      |
+| `config_mode(mode)`    | Set SPI mode (0–3)                         | `dict` (JSON)      |
+| `config_bits(bits)`    | Set bits per word                          | `dict` (JSON)      |
+| `config_bytes_to_read(n)` | Set SPI read size                      | `dict` (JSON)      |
 
 ---
 
@@ -417,7 +440,7 @@ The App Lab Python module that:
 - Provides SPI configuration helpers  
 
 ### **`Dockerfile`**  
-Builds a minimal Python 3.13 container with Flask + spidev.
+Builds a minimal Python 3.13 container with Flask + spidev + requests + jsonify.
 
 ### **`brick_compose.yaml`**  
 Defines the Docker service, device mapping, port exposure, and file‑watch rebuild rules.
@@ -447,7 +470,7 @@ The goal is to validate the **communication path**, not the data format.
 ## **Validated Features**
 
 - SPI3 access from inside a Docker container  
-- 1024‑byte transfers using `spidev`  
+- 1024‑byte transfers using `spidev` 
 - Float and integer decoding  
 - Hex dump formatting  
 - Runtime SPI reconfiguration  
@@ -460,8 +483,6 @@ The goal is to validate the **communication path**, not the data format.
 
 - No synchronization or framing  
 - No CRC or integrity checks  
-- `/read/ints` currently returns an incorrect JSON field (`lines` undefined)  
-- Always reads 1024 bytes  
 - No error handling for malformed payloads  
 
 These can be improved in future iterations.
@@ -471,7 +492,7 @@ These can be improved in future iterations.
 ## **Debugging**
 **Running out of Room**
 
-I find if you get "You don't have enough free space in /var/cache/apt/archives/." error, apparently because I am running out of the space allocated by Docker. So I would first run a docker system prune command:
+If you get "You don't have enough free space in /var/cache/apt/archives/." error, apparently because I am running out of the space allocated by Docker. So I would first run a docker system prune command:
 ```
 docker system prune --force && docker compose -f ~/ArduinoApps/spibridge/.cache/app-compose.yaml build --with-dependencies 
 ```
@@ -509,3 +530,160 @@ MIT License
 
 - [**Custom Bricks**](https://github.com/arduino/docs-content/blob/app-lab-custom-bricks-documentation/content/software/app-lab/5.bricks/3.custom-bricks/custom-bricks.md)
 - [**Arduino® App Lab 0.7: Custom Bricks are here!**](https://blog.arduino.cc/2026/04/29/arduino-app-lab-0-7-custom-bricks-are-here/)
+
+## **Test case example**
+1. This case just sends data from the MCU to the MPU. Does not use the read_command option for just sending data to the MPU
+---
+**sketch.ino**
+```c++
+// Source: https://forum.arduino.cc/t/how-to-install-python-packages-on-the-arduino-q/1434480/7
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+
+#include "SPIPeripheral.h"
+#include "Arduino_RouterBridge.h"
+
+#define num_vals 180
+#define spiBlock 1024
+
+SPIPeripheralClass<spiBlock> spi;
+uint8_t buffer[5];
+
+void floats_to_bytes(const float* src, size_t float_count, uint8_t* dst) {
+  if (!src || !dst || float_count == 0) return;
+  memcpy(dst, src, float_count * sizeof(float));
+}
+
+
+float sensorValues[num_vals];
+long randNumber;
+
+void get_sensor_data() {
+  for (uint8_t i = 0; i < num_vals; i++) {
+    randNumber = random(300);
+    sensorValues[i] = float(randNumber) / 10.0;
+  }
+}
+
+void setup() {
+  Serial.begin();
+  delay(2000);
+  Serial.println("Begin SPI3 Test....");
+  randomSeed(analogRead(42));
+  spi.begin();
+}
+
+
+void loop() {
+  uint8_t bytes[spiBlock];
+  //memset(bytes, 0, 1024);
+  
+  // 1. Read command
+  spi.depopulate(*buffer, 5);  
+
+  get_sensor_data();
+  floats_to_bytes(sensorValues, num_vals, bytes);
+  spi.populate(bytes, spiBlock);
+
+  // 3. Signal ready
+  spi.ready();
+  delayMicroseconds(5);
+}
+```
+## **SPIPeripheral.h** (this is mandatory for all sketches using SPI3 right now)
+
+```c++
+#ifndef SPI_PERIPHERAL_H
+#define SPI_PERIPHERAL_H
+
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/init.h>
+#include <zephyr/drivers/spi.h>
+
+#ifdef CONFIG_BOARD_ARDUINO_UNO_Q
+
+#define SPI_PERIPHERAL_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(zephyr_spi_slave)
+
+template <int SPI_MAX_MESSAGE>
+class SPIPeripheralClass {
+public:
+    SPIPeripheralClass() {
+        spi_cfg.frequency = 1000000;
+        spi_cfg.operation = SPI_WORD_SET(8) | SPI_OP_MODE_SLAVE;
+        rx.buf = rxmsg;
+        rx.len = SPI_MAX_MESSAGE;
+        rx_bufs.buffers = &rx;
+        rx_bufs.count = 1;
+        tx.buf = txmsg;
+        tx.len = SPI_MAX_MESSAGE;
+        tx_bufs.buffers = &tx;
+        tx_bufs.count = 1;
+
+    }
+    int begin() {
+        int ret = device_init(spi_peripheral);
+        return ret;
+    }
+
+    void depopulate(uint8_t &buf, size_t len) {
+        spi_transceive(spi_peripheral, &spi_cfg, &tx_bufs, &rx_bufs);
+        uint8_t* rx_bytes = static_cast<uint8_t*>(rx_bufs.buffers[0].buf);
+        buf = rx_bytes[0];
+    }
+
+    void* populate(uint8_t* buf, size_t len) {
+        return memcpy(tx.buf, buf, len);
+    }
+
+    int ready() {
+        return spi_transceive(spi_peripheral, &spi_cfg, &tx_bufs, &rx_bufs);
+    }
+private:
+
+    const struct device *const spi_peripheral = DEVICE_DT_GET(DT_BUS(SPI_PERIPHERAL_NODE));
+    struct spi_config spi_cfg;
+
+    uint8_t rxmsg[SPI_MAX_MESSAGE];
+    struct spi_buf rx ;
+    struct spi_buf_set rx_bufs;
+
+    uint8_t txmsg[SPI_MAX_MESSAGE];
+    struct spi_buf tx ;
+    struct spi_buf_set tx_bufs;
+};
+
+#endif
+#endif //SPI_PERIPHERAL_H
+## **main.py**
+```python
+import time
+import numpy as np
+import spibridge
+from arduino.app_utils import App
+
+print(spibridge.config_speed(1000000))
+print(spibridge.config_mode(0))
+print(spibridge.config_bits(8))
+print(spibridge.config_bytes_to_read(1024))
+
+def loop():
+    # -------------------------
+    # READ FLOATS (0x0B)
+    # -------------------------
+    # Get Read Type for processing in Arduino Sketch
+    #np.array(spibridge.readFloats(n=18), dtype=np.float32)
+    # Get Integer daya
+    floats_out = np.array(spibridge.readFloats(n=18), dtype=np.float32)
+    print("FLOATS:", floats_out)
+
+    print("---------------------------------------------------")
+    time.sleep(0.01)
+App.run(user_loop=loop)
+```
+
+2, List of other examples in samples directory of repo
+- Read on multiple data types
+- Simple scheduling of reading of Integers and Floats
+---
