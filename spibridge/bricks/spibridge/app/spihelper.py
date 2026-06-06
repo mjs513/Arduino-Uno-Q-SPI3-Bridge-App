@@ -44,6 +44,7 @@ class SPIBridge:
     # -----------------------------
     # Core read functions
     # -----------------------------
+    # original read_bytes
     #def read_bytes(self, read_command, bytes_to_read=1024):
     #    if self.spi is None:
     #        raise RuntimeError("SPI not initialized. Call init_spi() first.")
@@ -63,7 +64,7 @@ class SPIBridge:
         tx = cmd + [0] * (bytes_to_read - 5)
     
         # Perform SPI transfer
-        rx = self.spi.xfer(tx)
+        rx = self.spi.xfer2(tx)
         return rx
 
 
