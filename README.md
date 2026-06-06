@@ -684,6 +684,18 @@ App.run(user_loop=loop)
 ```
 
 2, List of other examples in samples directory of repo
-- Read on multiple data types
-- Simple scheduling of reading of Integers and Floats
+
+```text
+├── Lidar Test Struct of 5776 Bytes
+├── Mixed Data Structure
+├── Multiple Data Type Reads
+├── Reading Scheduled Data
+├── Scheduling with Python Threads
+├── Simple Read Bytes
+└── Single Data Type Read
+```
+NOTES
+- Max useful bus speed for transferring a lot of data between MCU and MPU seems to be 1Mhz if transferring more than one data type.
+- Max number of bytes that you can use seems to be around 2048.
+- Remember to change the block size in both the sketch and in python main.py
 ---
