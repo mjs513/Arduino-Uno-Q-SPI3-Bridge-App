@@ -11,9 +11,6 @@ def readBytes(n=None):
         url += f"?n={n}"
     return requests.get(url).json()
 
-
-
-
 # -----------------------------
 # READ: FLOATS
 # -----------------------------
@@ -51,3 +48,7 @@ def config_bits(bits):
 def config_bytes_to_read(n):
     url = f"{BASE_URL}/config/bytes"
     return requests.post(url, json={"bytes": n}).json()
+
+def config_command(cmd_type, command):
+    url = f"{BASE_URL}/config/cmd/{cmd_type}"
+    return requests.post(url, json={"command": command}).json()
