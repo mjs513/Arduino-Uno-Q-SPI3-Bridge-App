@@ -22,62 +22,55 @@ It totally based on the **custom-brick-with-container app** developed by @ptilli
 
 ---
 
-## **Architecture**
-```
-+-------------------------------------------------------------+
-|                     UNO Q Firmware (spibridge)              |
-|  - receives commands                                        |
-|  - reads sensor / buffer                                    |
-|  - returns structured frame                                 |
-|  - sketch.ino/main.py                                       |
-+-------------------------------------------------------------+
-	 |
-	 v
-+-------------------------------------------------------------+
-|                        User Application                     |
-|                  (sketch.ino / loop                         |
-+-------------------------------+-----------------------------+
-                                |
-                                v
-+-------------------------------------------------------------+
-|                        User Application                     |
-|                  (main.py / App.run(loop))                  |
-+-------------------------------+-----------------------------+
-                                |
-                                v
-                   +-----------------------+
-                   |    Custom Brick       |
-                   +-----------+-----------+
-                               |
-                               |
-                               v
-+-------------------------------------------------------------+
-|                     Python Client (__init__.py)             |
-|  - config_speed()                                           |
-|  - readBytes()                                              |
-|  - readInts()                                               |
-|  - readFloats()                                             |
-+-------------------------------+-----------------------------+
-                                |
-                                |  ** HTTP POST/GET **
-                                v
-+-------------------------------------------------------------+
-|                     Flask Server (app.py)                   |
-|  - /config/* endpoints                                      |
-|  - /read/* endpoints                                        |
-|  - calls spihelper                                          |
-+-------------------------------+-----------------------------+
-                                |
-                                |  ** SPI Command (5 bytes) **
-                                v
-+-------------------------------------------------------------+
-|                     SPI Helper (spihelper.py)               |
-|  - open spidev                                              |
-|  - set mode/speed/bits                                      |
-|  - send command                                             |
-|  - read header + payload                                    |
-|  - parse into arrays                                        |
-+-------------------------------+-----------------------------+
+## **Communication**
+```mermaid
+---
+config:
+  flowchart:
+    curve: monotoneY
+  theme: base
+  themeVariables:
+    clusterBkg: '#ffffff'
+    edgeLabelBackground: '#ffffff'
+    lineColor: '#000000'
+    primaryBorderColor: '#000000'
+    primaryColor: '#f0f0f0'
+    primaryTextColor: '#000000'
+---
+
+flowchart TB
+  subgraph main["<b>Communication Overview</b>"]
+    direction TB
+
+    subgraph mcu["<b>MCU</b>"]
+      direction TB
+
+      sketch["Sketch program"]
+    end
+
+    subgraph mpu["<b>MPU</b>"]
+      direction TB
+
+      subgraph mainContainer["<b>Main Container</b>"]
+        direction TB
+
+        pythonScript["Python script"]
+        spibridgePackage["spibridge Python package"]
+      end
+
+      subgraph brickContainer["<b>spi3bridge Container</b>"]
+        direction TB
+
+        webServer["Web server"]
+        spihelper["spihelper Python module"]
+      end
+    end
+  end
+
+  pythonScript <-- "Python" --> spibridgePackage
+  spibridgePackage <-- "HTTP" --> webServer
+  webServer <-- "Python" --> spihelper
+  spibridgePackage <-- "SPI" --> sketch
 ```
 
 
