@@ -1,2 +1,4 @@
 numpy
 schedule
+streamlit
+plotly
