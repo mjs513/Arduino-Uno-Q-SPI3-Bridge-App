@@ -67,30 +67,31 @@ class SPIBridge:
         rx = self.spi.xfer2(tx)
         return rx
 
-def write_bytes(self, write_command, payload):
-    """
-    write_command: iterable of up to 5 bytes
-    payload: iterable of data bytes to send after the command
-    """
-
-    if self.spi is None:
-        raise RuntimeError("SPI not initialized. Call init_spi() first.")
-
-    # --- Ensure command is exactly 5 bytes ---
-    cmd = list(write_command)
-    if len(cmd) < 5:
-        cmd = cmd + [0] * (5 - len(cmd))
-    elif len(cmd) > 5:
-        cmd = cmd[:5]
-
-    # --- Build TX buffer ---
-    tx = cmd + list(payload)
-
-    # --- Perform SPI transfer ---
-    self.spi.xfer2(tx)
-
-    # Pure write: ignore RX
-    return True
+    def write_bytes(self, write_command, payload):
+        """
+        write_command: iterable of up to 5 bytes
+        payload: iterable of data bytes to send after the command
+        """
+    
+        if self.spi is None:
+            raise RuntimeError("SPI not initialized. Call init_spi() first.")
+    
+        # --- Ensure command is exactly 5 bytes ---
+        cmd = list(write_command)
+        if len(cmd) < 5:
+            cmd = cmd + [0] * (5 - len(cmd))
+        elif len(cmd) > 5:
+            cmd = cmd[:5]
+    
+        # --- Build TX buffer ---
+        tx = cmd + list(payload)
+        print(tx)
+    
+        # --- Perform SPI transfer ---
+        self.spi.xfer2(tx)
+    
+        # Pure write: ignore RX
+        return True
 
 
     # -----------------------------

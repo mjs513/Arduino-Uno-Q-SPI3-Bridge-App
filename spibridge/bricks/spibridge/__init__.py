@@ -30,8 +30,43 @@ def readInts(n=None):
         url += f"?n={n}"
     return requests.get(url).json()
 
+
+# -------------------------------
+# Write endpoint interface
+# --------------------------------
+def writeBytes(payload):
+    url = f"{BASE_URL}/write/bytes"
+    return requests.post(url, json={"payload": payload}).json()
+
+def writeFloats(payload):
+    url = f"{BASE_URL}/write/floats"
+    return requests.post(url, json={"payload": payload}).json()
+
+def writeInts(payload):
+    url = f"{BASE_URL}/write/ints"
+    return requests.post(url, json={"payload": payload}).json()
+
+def writeStruct(format_list, values):
+    url = f"{BASE_URL}/write/struct"
+    return requests.post(url, json={
+        "format": format_list,
+        "values": values
+    }).json()
+
+def writeStructs(struct_list):
+    url = f"{BASE_URL}/write/structs"
+    return requests.post(url, json={"structs": struct_list}).json()
+
+def writeStructArrayFields(format_dict, values_dict):
+    url = f"{BASE_URL}/write/struct_arrayfields"
+    return requests.post(url, json={
+        "format": format_dict,
+        "values": values_dict
+    }).json()
+
+
 # -----------------------------
-# CONFIG ENDPOINTS
+# CONFIG 
 # -----------------------------
 def config_speed(hz):
     url = f"{BASE_URL}/config/speed"
@@ -51,4 +86,8 @@ def config_bytes_to_read(n):
 
 def config_command(cmd_type, command):
     url = f"{BASE_URL}/config/cmd/{cmd_type}"
+    return requests.post(url, json={"command": command}).json()
+
+def configWriteCommand(cmd_type, command):
+    url = f"{BASE_URL}/config/writecmd/{cmd_type}"
     return requests.post(url, json={"command": command}).json()
